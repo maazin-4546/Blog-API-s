@@ -8,7 +8,7 @@ const {
     deleteBlog,
     getAllBlogs,
     getSingleBlog,
-    changeBlogStatus,
+    publishBlog,
     likeOrDislikeBlog,
     filterBlogs
 } = require('../controller/blogController');
@@ -18,7 +18,7 @@ router.post('/create', authorize(['author']), createBlog)
 
 router.put('/update/:id', authorize(['author']), updateBlog)
 
-router.put('/publish/:id', authorize(['author']), changeBlogStatus)
+router.put('/publish/:id', authorize(['author']), publishBlog)
 
 router.delete('/delete/:id', authorize(['author', 'admin']), deleteBlog)
 

@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
         lowercase: true,
         trim: true,
     },
+    isEmailVerified: { type: Boolean, default: false },
     password: {
         type: String,
         required: true,
@@ -32,6 +33,15 @@ const userSchema = new mongoose.Schema({
         enum: ['active', 'inactive', 'banned'],
         default: 'active',
     },
+    emailVerificationOtp: { type: String },
+    emailVerificationOtpExpiry: { type: Date },
+    passwordResetOtp: { type: String },
+    passwordResetOtpExpiry: { type: Date },
+    otpRequestHistory: {
+        type: [Date],
+        default: [],
+    },
+
 }, { timestamps: true });
 
 
