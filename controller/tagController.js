@@ -1,4 +1,5 @@
 const Tag = require('../models/Tag');
+const { sendError, sendSuccess } = require('../utils/responseService');
 const slugs = require("../utils/slugs")
 
 
@@ -31,9 +32,11 @@ const createTag = async (req, res) => {
             tag,
         });
 
+        sendSuccess(res, 200, req.t('tag_created_successfully'), blogs);
+
     } catch (error) {
         console.error('Error creating tag:', error);
-        res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+        sendError(res, req.t('tag_creation_failed'), error);
     }
 };
 
@@ -41,20 +44,11 @@ const createTag = async (req, res) => {
 const getAllTags = async (req, res) => {
     try {
         const tags = await Tag.find().sort({ createdAt: -1 });
-
-        res.status(200).json({
-            success: true,
-            message: 'Tags fetched successfully.',
-            tags,
-        });
+        sendSuccess(res, 200, req.t('tags_fetched_successfully'), tags);
 
     } catch (error) {
         console.error('Error fetching Tags:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('Server error. Please try again later.'), error);
     }
 };
 
@@ -74,18 +68,11 @@ const deleteTag = async (req, res) => {
 
         await Tag.findByIdAndDelete(id);
 
-        res.status(200).json({
-            success: true,
-            message: 'Tag deleted successfully.',
-        });
+        sendSuccess(res, 200, req.t('tag_deleted_successfully'));
 
     } catch (error) {
         console.error('Error deleting Tag:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('tag_deletion_failed'), error);
     }
 };
 

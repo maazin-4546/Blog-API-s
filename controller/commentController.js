@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment');
 const Blog = require('../models/Blog');
+const { sendSuccess, sendError } = require('../utils/responseService');
 
 
 const createComment = async (req, res) => {
@@ -24,20 +25,12 @@ const createComment = async (req, res) => {
         });
 
         await comment.save();
+        sendSuccess(res, 200, req.t('comment_created_successfully'), comment);
 
-        res.status(201).send({
-            sucess: true,
-            message: 'Comment created successfully.',
-            comment,
-        });
 
     } catch (error) {
         console.error('Error creating comment:', error);
-        res.status(500).send({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('comment_creation_failed'), error);
     }
 };
 
@@ -75,19 +68,11 @@ const deleteComment = async (req, res) => {
         }
 
         // If none of the above, forbid deletion
-        return res.status(403).send({
-            sucess: false,
-            message: 'You are not authorized to delete this comment.',
-            error: error.message
-        });
+        sendError(res, req.t('You are not authorized to delete this comment.'), error);
 
     } catch (error) {
         console.error('Error deleting comment:', error);
-        res.status(500).send({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('Server error. Please try again later.'), error);
     }
 };
 
@@ -115,19 +100,11 @@ const updateComment = async (req, res) => {
         comment.commentText = commentText.trim();
         await comment.save();
 
-        res.status(200).send({
-            success: true,
-            message: 'Comment updated successfully.',
-            comment,
-        });
+        sendSuccess(res, 200, req.t('comment_updated_successfully'), comment);
 
     } catch (error) {
         console.error('Error updating comment:', error);
-        res.status(500).send({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('comment_update_failed'), error);
     }
 };
 
@@ -158,19 +135,11 @@ const getBlogComments = async (req, res) => {
             }
         });
 
-        res.status(200).send({
-            success: true,
-            message: 'Comments fetched successfully.',
-            comments: rootComments,
-        });
+        sendSuccess(res, 200, req.t('comments_fetched_successfully'), rootComments);
 
     } catch (error) {
         console.error('Error fetching blog comments:', error);
-        res.status(500).send({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('comments_fetch_failed'), error);
     }
 };
 

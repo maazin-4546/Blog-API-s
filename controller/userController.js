@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailerTransporter = require("../utils/nodeMailer");
+const { sendSuccess } = require("../utils/responseService");
 
 
 const registerUser = async (req, res) => {
@@ -77,11 +78,11 @@ const registerUser = async (req, res) => {
 
         await nodemailerTransporter.sendMail(mailOptions)
 
-        res.status(200).send({ success: true, message: "OTP sent to email successfully" });
+        sendSuccess(res, 200, req.t('OTP sent to email successfully'), user);
 
     } catch (error) {
         console.log(error)
-        res.status(500).send({ sucess: false, message: "Failed to register user", error: error.message });
+        sendError(res, req.t('Failed to register user'), error);
     }
 }
 
@@ -117,19 +118,11 @@ const verifyOtpAndRegister = async (req, res) => {
 
         await user.save()
 
-        res.status(200).send({
-            success: true,
-            message: "Email verified and user created successfully",
-            user
-        });
+        sendSuccess(res, 200, req.t('otp_verified_successfully'), user);
 
     } catch (error) {
         console.log("Error in register", error)
-        res.status(500).send({
-            success: false,
-            message: "Internal Server Error",
-            error: error.message
-        })
+        sendError(res, req.t('otp_verification_failed'), error);
     }
 }
 
@@ -163,25 +156,19 @@ const loginUser = async (req, res) => {
             secure: true,
         });
 
-        return res.status(200).send({
-            success: true,
-            message: "Login successful",
-            token,
-            user: {
+        sendSuccess(res, 200, req.t('login_successful'),
+            {
+                token,
                 userId: checkUser._id,
                 name: checkUser.name,
                 email: checkUser.email,
                 role: checkUser.role,
             }
-        });
+        );
 
     } catch (error) {
         console.error("Login Error:", error.message);
-        return res.status(500).send({
-            success: false,
-            message: "Login failed",
-            error: error.message,
-        });
+        sendError(res, req.t('login_failed'), error);
     }
 }
 
@@ -193,18 +180,11 @@ const logoutUser = async (req, res) => {
             secure: true,
         });
 
-        return res.status(200).send({
-            success: true,
-            message: 'Logout successful',
-        });
+        sendSuccess(res, 200, req.t('logout_successful'));
 
     } catch (error) {
         console.error("Logout Error:", error.message);
-        return res.status(500).send({
-            success: false,
-            message: 'Logout failed',
-            error: error.message,
-        });
+        sendError(res, req.t('logout_failed'), error);
     }
 };
 
@@ -215,19 +195,11 @@ const getAllUsers = async (req, res) => {
             .select('-password')
             .sort({ createdAt: -1 });
 
-        res.status(200).send({
-            sucess: true,
-            message: 'Users fetched successfully.',
-            users,
-        });
+        sendSuccess(res, 200, req.t('user_list_fetched'), users);
 
     } catch (error) {
         console.error('Error fetching users:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Internal Server error'), error);
     }
 };
 
@@ -241,19 +213,11 @@ const getCurrentUser = async (req, res) => {
             return res.status(404).send({ message: 'User not found.' });
         }
 
-        res.status(200).send({
-            sucess: true,
-            message: 'User fetched successfully.',
-            user,
-        });
+        sendSuccess(res, 200, req.t('User fetched successfully.'), user);
 
     } catch (error) {
         console.error('Error fetching current user:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Internal Server error'), error);
     }
 };
 
@@ -286,13 +250,18 @@ const updateUserStatus = async (req, res) => {
             },
         });
 
+        sendSuccess(res, 200, req.t('user_status_updated'),
+            {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                status: user.status,
+            });
+
+
     } catch (error) {
         console.error('Error updating user status:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Error updating user status'), error);
     }
 };
 
@@ -314,24 +283,18 @@ const updateUserRole = async (req, res) => {
         user.role = role;
         await user.save();
 
-        res.status(200).send({
-            sucess: true,
-            message: `User role updated to ${role}.`,
-            user: {
+        sendSuccess(res, 200, req.t('user_role_updated'),
+            {
                 id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
-            },
-        });
+            });
+
 
     } catch (error) {
         console.error('Error updating user role:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Error updating user role:'), error);
     }
 };
 
@@ -346,23 +309,16 @@ const deleteUser = async (req, res) => {
             return res.status(404).send({ message: 'User not found.' });
         }
 
-        res.status(200).send({
-            success: true,
-            message: 'User deleted successfully.',
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-            },
+        sendSuccess(res, 200, req.t('user_deleted_successfully'), {
+            id: user._id,
+            name: user.name,
+            email: user.email,
         });
+
 
     } catch (error) {
         console.error('Error deleting user:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Internal Server error'), error);
     };
 }
 
@@ -376,19 +332,11 @@ const getUserById = async (req, res) => {
             return res.status(404).send({ message: 'User not found.' });
         }
 
-        res.status(200).send({
-            sucess: true,
-            message: 'User fetched successfully.',
-            user,
-        });
+        sendSuccess(res, 200, req.t('User fetched successfully.'), user);
 
     } catch (error) {
         console.error('Error fetching user:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Internal Server error'), error);
     }
 };
 
@@ -412,19 +360,12 @@ const updateUserProfile = async (req, res) => {
             return res.status(404).send({ message: 'User not found.' });
         }
 
-        res.status(200).send({
-            success: true,
-            message: 'Profile updated successfully.',
-            user,
-        });
+        sendSuccess(res, 200, req.t('user_profile_updated'), user);
+
 
     } catch (error) {
         console.error('Error updating profile:', error);
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('user_not_found'), error);
     }
 };
 
@@ -487,18 +428,12 @@ const forgetPassword = async (req, res) => {
 
         await nodemailerTransporter.sendMail(mailOptions)
 
-        res.status(200).send({
-            sucess: true,
-            message: "OTP sent to email",
-        })
+        sendSuccess(res, 200, req.t('password_reset_email_sent'));
+
 
     } catch (error) {
         console.log("Error in seding opt: ", error)
-        res.status(400).send({
-            success: false,
-            message: "Internal Server error",
-            error: error.message
-        })
+        sendError(res, req.t('Internal Server error'), error);
     }
 }
 
@@ -542,15 +477,12 @@ const resetPassword = async (req, res) => {
 
         await user.save();
 
-        res.status(200).send({ success: true, message: "Password reset successfully" });
+        sendSuccess(res, 200, req.t('password_reset_successful'), blogs);
+
 
     } catch (error) {
         console.error(error);
-        res.status(500).send({
-            success: false,
-            message: "Server error",
-            error: error.message,
-        });
+        sendError(res, req.t('password_reset_unsuccessful'), error);
     }
 };
 

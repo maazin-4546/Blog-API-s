@@ -3,6 +3,7 @@ const Category = require('../models/Category');
 const Tag = require('../models/Tag');
 const User = require('../models/User');
 const nodemailerTransporter = require('../utils/nodeMailer');
+const { sendError, sendSuccess } = require('../utils/responseService');
 const slugs = require("../utils/slugs")
 
 
@@ -78,9 +79,11 @@ const createBlog = async (req, res) => {
             blog,
         });
 
+        sendSuccess(res, 201, req.t('blog_created_successfully'), blog);
+
     } catch (error) {
         console.error('Error creating blog:', error);
-        res.status(500).json({ success: false, message: 'Server error. Please try again later.', error: error.message });
+        sendError(res, req.t('blog_creation_failed'), error);
     }
 };
 
@@ -119,14 +122,11 @@ const updateBlog = async (req, res) => {
 
         const updatedBlog = await blog.save();
 
-        res.status(200).json({
-            message: 'Blog updated successfully.',
-            blog: updatedBlog,
-        });
+        sendSuccess(res, 200, req.t('blog_updated_successfully'), updatedBlog);
 
     } catch (error) {
         console.error('Error updating blog:', error);
-        res.status(500).json({ message: 'Internal server error. Please try again later.' });
+        sendError(res, req.t('blog_update_failed'), error);
     }
 };
 
@@ -166,20 +166,18 @@ const deleteBlog = async (req, res) => {
     }
 };
 
-
+//! Multilingual Used
 const getAllBlogs = async (req, res) => {
     try {
         const blogs = await Blog.find({ isDeleted: false })
             .populate('author', 'name')
             .sort({ createdAt: -1 });
-        res.status(200).json({
-            message: 'Blogs fetched successfully.',
-            blogs,
-        });
+
+        sendSuccess(res, 200, req.t('blogs_fetched_successfully'), blogs);
 
     } catch (error) {
         console.error('Error fetching blogs:', error);
-        res.status(500).json({ message: 'Internal server error. Please try again later.' });
+        sendError(res, req.t('blogs_fetch_failed'), error);
     }
 };
 
@@ -194,19 +192,11 @@ const getSingleBlog = async (req, res) => {
             return res.status(404).send({ message: "Blog not found" })
         }
 
-        res.status(200).send({
-            success: true,
-            message: "Blog found successfully",
-            blog,
-        })
+        sendSuccess(res, 200, req.t("blog_found_successfully"), blog)
 
     } catch (error) {
         console.log(error)
-        res.status(500).send({
-            success: false,
-            message: "Internal server error",
-            error: error.message
-        })
+        sendError(res, req.t('blog_not_found'), error);
     }
 }
 
@@ -256,19 +246,12 @@ const publishBlog = async (req, res) => {
 
         await nodemailerTransporter.sendMail(mailOptions)
 
-        res.status(200).json({
-            success: true,
-            message: `Congractulations your blog is Published.`,
-            blog,
-        });
+        sendSuccess(res, 200, req.t("blog_published_successfully"), blog)
+
 
     } catch (error) {
         console.error('Error in publish blog:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('blog_publish_failed'), error);
     }
 };
 
@@ -301,16 +284,11 @@ const likeOrDislikeBlog = async (req, res) => {
 
         await blog.save();
 
-        res.status(200).json({
-            success: true,
-            message: `Blog ${action}d successfully.`,
-            totalLikes: blog.likes.length,
-            totalDislikes: blog.dislikes.length,
-        });
+        sendSuccess(res, 200, req.t('reaction_updated'), { totalLikes: blog.likes.length, totalDislikes: blog.dislikes.length });
 
     } catch (error) {
         console.error('Error liking/disliking blog:', error);
-        res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+        sendError(res, req.t('reaction_failed'), error);
     }
 };
 
@@ -416,22 +394,16 @@ const filterBlogs = async (req, res) => {
         const countResult = await Blog.aggregate(countPipeline);
         const totalBlogs = countResult[0]?.totalBlogs || 0;
 
-        res.status(200).json({
-            success: true,
-            message: 'Blogs fetched successfully.',
+        sendSuccess(res, 200, req.t('filtered_blogs_fetched'), {
             totalBlogs,
             currentPage: parseInt(page),
             totalPages: Math.ceil(totalBlogs / parseInt(limit)),
-            blogs,
+            blogs
         });
 
     } catch (error) {
         console.error('Error fetching blogs:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error. Please try again later.',
-            error: error.message,
-        });
+        sendError(res, req.t('filtered_blogs_failed'), error);
     }
 };
 
